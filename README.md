@@ -61,8 +61,3 @@ MCA Final Year Project
 Specialization: Machine Learning & AI
 
 ---
-
-## 📅 Project Timeline
-
-Duration: 2 Months  
-Status: In Development
