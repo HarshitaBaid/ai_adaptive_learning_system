@@ -6,7 +6,7 @@ class SubjectResponse(BaseModel):
     name: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
         
 
 class TopicResponse(BaseModel):
@@ -15,7 +15,7 @@ class TopicResponse(BaseModel):
     subject_id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
         
         
 class TopicNested(BaseModel):
@@ -33,3 +33,8 @@ class SubjectWithTopics(BaseModel):
 
     class Config:
         orm_mode = True
+        
+        
+class TopicCreate(BaseModel):
+    name: str
+    subject_id: int
