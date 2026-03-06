@@ -68,7 +68,34 @@ class QuizAttempt(Base):
     score = Column(Integer)
     total_questions = Column(Integer)
     time_taken = Column(Float)
-    attempt_date = Column(DateTime)
+    attempt_date = Column(DateTime, server_default=func.now())
 
     student = relationship("Student", back_populates="quiz_attempts")
     topic = relationship("Topic", back_populates="quiz_attempts")
+    responses = relationship("Response", back_populates="attempt", cascade="all, delete")
+    
+    
+class Response(Base):
+    __tablename__ = "responses"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    quiz_attempt_id = Column(
+        Integer,
+        ForeignKey("quiz_attempts.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    question_id = Column(
+        Integer,
+        ForeignKey("questions.id"),
+        nullable=False
+    )
+
+    selected_option = Column(String(1), nullable=False)
+
+    is_correct = Column(Boolean, nullable=False)
+
+    # Relationships
+    attempt = relationship("QuizAttempt", back_populates="responses")
+    question = relationship("Question")

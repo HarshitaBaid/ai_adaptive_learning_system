@@ -100,3 +100,23 @@ class StudentResponse(BaseModel):
 class StudentLogIn(BaseModel):
     email: EmailStr
     password: str  
+    
+    
+class QuizSubmit(BaseModel):
+    attempt_id: int
+    time_taken: float
+    answers: dict[int, str]
+    
+
+class ResponseCreate(BaseModel):
+    question_id: int
+    selected_option: str
+    
+    
+class ResponseResponse(BaseModel):
+    question_id: int
+    selected_option: str
+    is_correct: bool
+
+    class Config:
+        from_attributes = True
