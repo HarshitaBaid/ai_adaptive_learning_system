@@ -1,5 +1,6 @@
-from pydantic import BaseModel
-from typing import List
+from pydantic import BaseModel, EmailStr, Field
+from typing import List, Optional
+from datetime import datetime
 
 class SubjectResponse(BaseModel):
     id: int
@@ -23,7 +24,7 @@ class TopicNested(BaseModel):
     name: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class SubjectWithTopics(BaseModel):
@@ -32,9 +33,70 @@ class SubjectWithTopics(BaseModel):
     topics: List[TopicNested] = []
 
     class Config:
-        orm_mode = True
+        from_attributes = True
         
         
 class TopicCreate(BaseModel):
     name: str
     subject_id: int
+    
+    
+class QuestionCreate(BaseModel):
+    topic_id: int
+    question_text: str
+    option_a: str
+    option_b: str
+    option_c: str
+    option_d: str
+    correct_option: str
+    difficulty_level: str
+    
+
+class QuestionResponse(BaseModel):
+    id: int
+    question_text: str
+    option_a: str
+    option_b: str
+    option_c: str
+    option_d: str
+    difficulty_level: str
+
+    class Config:
+        from_attributes = True
+        
+
+class QuizStart(BaseModel):
+    student_id: int
+    topic_id: int
+
+class QuizAttemptResponse(BaseModel):
+    id: int
+    student_id: int
+    topic_id: int
+    score: Optional[int]
+    total_questions: Optional[int]
+    attempt_date: datetime
+
+    class Config:
+        from_attributes = True
+        
+    
+class StudentCreate(BaseModel):
+    name: str
+    email: EmailStr
+    password: str = Field(..., min_length=6, max_length=72)   
+    
+
+class StudentResponse(BaseModel):
+    id: int
+    name: str
+    email: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+        
+        
+class StudentLogIn(BaseModel):
+    email: EmailStr
+    password: str  
