@@ -98,3 +98,37 @@ def submit_quiz(data: schemas.QuizSubmit, db: Session = Depends(get_db)):
         "total": total,
         "percentage": percentage
     }
+    
+    
+@router.get("/result/{attempt_id}", response_model=schemas.ResultResponse)
+def get_result(attempt_id: int, db: Session = Depends(get_db)):
+
+    attempt = db.query(models.QuizAttempt).filter(
+        models.QuizAttempt.id == attempt_id
+    ).first()
+
+    if not attempt:
+        raise HTTPException(status_code=404, detail="Attempt not found")
+
+    responses = db.query(models.Response).filter(
+        models.Response.quiz_attempt_id == attempt_id
+    ).all()
+
+    result_responses = []
+
+    for r in responses:
+        result_responses.append({
+            "question_id": r.question_id,
+            "selected_option": r.selected_option,
+            "correct_option": r.question.correct_option,
+            "is_correct": r.is_correct
+        })
+
+    percentage = (attempt.score / attempt.total_questions * 100) if attempt.total_questions else 0
+
+    return {
+        "score": attempt.score,
+        "total": attempt.total_questions,
+        "percentage": percentage,
+        "responses": result_responses
+    }

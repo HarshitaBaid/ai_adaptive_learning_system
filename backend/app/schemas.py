@@ -116,7 +116,18 @@ class ResponseCreate(BaseModel):
 class ResponseResponse(BaseModel):
     question_id: int
     selected_option: str
+    correct_option: str
     is_correct: bool
+
+    class Config:
+        from_attributes = True
+        
+        
+class ResultResponse(BaseModel):
+    score: int
+    total: int
+    percentage: float
+    responses: List[ResponseResponse] 
 
     class Config:
         from_attributes = True
