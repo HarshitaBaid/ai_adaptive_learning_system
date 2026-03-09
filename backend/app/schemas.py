@@ -131,3 +131,39 @@ class ResultResponse(BaseModel):
 
     class Config:
         from_attributes = True
+        
+        
+class AttemptHistoryResponse(BaseModel):
+    id: int
+    topic_id: int
+    score: int
+    total_questions: int
+    percentage: float
+    attempt_date: datetime
+    time_taken: float
+    
+    class Config:
+        from_attributes = True
+        
+        
+class WeakTopicResponse(BaseModel):
+    topic_id: int
+    average_percentage: float
+    status: str
+
+    class Config:
+        from_attributes = True
+        
+        
+class QuestionResponse(BaseModel):
+    id: int
+    topic_id: int
+    question_text: str
+    option_a: str
+    option_b: str
+    option_c: str
+    option_d: str
+    difficulty_level: str
+
+    class Config:
+        from_attributes = True
