@@ -167,3 +167,12 @@ class QuestionResponse(BaseModel):
 
     class Config:
         from_attributes = True
+        
+        
+class StudentProgressResponse(BaseModel):
+    student_id: int
+    total_attempts: int
+    correct_answers: int
+    accuracy: float
+    strong_topics: List[str]
+    weak_topics: List[str]
