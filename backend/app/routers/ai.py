@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas import QuestionResponse
-from app.models import QuizAttempt, Question
+from app.models import QuizAttempt, Question, Response
 
 router = APIRouter(prefix="/ai", tags=["AI"])
 
@@ -71,6 +71,14 @@ def ai_recommend_questions(student_id: int, db: Session = Depends(get_db)):
             "time": a.time_taken
         })
 
+    attempted_question_ids = db.query(Response.question_id).join(
+        QuizAttempt,
+        QuizAttempt.id == Response.quiz_attempt_id
+    ).filter(QuizAttempt.student_id == student_id).all()
+    
+    attempted_question_ids = list(set([q[0] for q in attempted_question_ids]))
+    print(attempted_question_ids)
+    
     recommended_questions = []
 
     for topic_id, records in topic_data.items():
@@ -89,8 +97,22 @@ def ai_recommend_questions(student_id: int, db: Session = Depends(get_db)):
 
         questions = db.query(Question).filter(
             Question.topic_id == topic_id,
-            Question.difficulty_level == difficulty
+            Question.difficulty_level == difficulty,
+            ~Question.id.in_(attempted_question_ids)
         ).limit(3).all()
+        
+        # fallback 1: ignore difficulty
+        if not questions:
+            questions = db.query(Question).filter(
+                Question.topic_id == topic_id,
+                ~Question.id.in_(attempted_question_ids)
+            ).limit(3).all()
+
+        # fallback 2: allow attempted questions
+        if not questions:
+            questions = db.query(Question).filter(
+                Question.topic_id == topic_id
+            ).limit(3).all()
 
         recommended_questions.extend(questions)
 
