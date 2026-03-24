@@ -15,7 +15,7 @@ def start_quiz(data: schemas.QuizStart, db: Session = Depends(get_db)):
     topic = db.query(models.Topic).filter(
         models.Topic.id == data.topic_id
     ).first()
-    print("hdsgvhd")
+    
     if not topic:
         raise HTTPException(status_code=404, detail="Topic not found")
 

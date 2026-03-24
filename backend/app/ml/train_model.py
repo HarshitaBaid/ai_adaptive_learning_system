@@ -37,4 +37,4 @@ model.fit(X_train, y_train)
 
 print("Model accuracy:", model.score(X_test, y_test))
 
-joblib.dump(model, "ml/weakness_model.pkl")
+joblib.dump(model, "app/ml/weakness_model.pkl")

@@ -9,7 +9,7 @@ from app.models import QuizAttempt, Question, Response
 
 router = APIRouter(prefix="/ai", tags=["AI"])
 
-model = joblib.load("ml/weakness_model.pkl")
+model = joblib.load("app/ml/weakness_model.pkl")
 
 
 @router.get("/predict/{student_id}")
