@@ -56,7 +56,7 @@ def login_student(student: schemas.StudentLogIn, db: Session = Depends(get_db)):
     
     
 @router.get("/{student_id}/attempts", response_model=list[schemas.AttemptHistoryResponse])
-def student_attemot_history(student_id: int, db: Session = Depends(get_db)):
+def student_attempt_history(student_id: int, db: Session = Depends(get_db)):
 
     attempt_data = db.query(QuizAttempt).filter(QuizAttempt.student_id == student_id).all()
 

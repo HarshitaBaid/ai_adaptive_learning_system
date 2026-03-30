@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import List, Optional
 from datetime import datetime
 
@@ -85,6 +85,12 @@ class StudentCreate(BaseModel):
     name: str
     email: EmailStr
     password: str = Field(..., min_length=6, max_length=72)   
+    
+    @field_validator("name", "password")
+    def not_empty(cls, v, info):
+        if not v.strip():
+            raise ValueError(f"{info.field_name} cannot be empty or spaces")
+        return v.strip() if info.field_name == "name" else v
     
 
 class StudentResponse(BaseModel):
