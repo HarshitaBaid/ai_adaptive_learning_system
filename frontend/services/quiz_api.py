@@ -59,3 +59,24 @@ def submit_feedback(attempt_id, question_id, corrected_answer):
 
     res = requests.post(f"{BASE_URL}/feedback", json=payload)
     return res.status_code == 200
+
+
+def get_progress(student_id):
+    res = requests.get(f"{BASE_URL}/ai/progress/{student_id}")
+    return res.json() if res.status_code == 200 else None
+
+
+def get_recommendations(student_id):
+    res = requests.get(f"{BASE_URL}/ai/recommend/{student_id}")
+    return res.json() if res.status_code == 200 else []
+
+
+def submit_practice(student_id, answers, time_taken):
+    payload = {
+        "student_id": student_id,
+        "answers": answers,
+        "time_taken": time_taken
+    }
+
+    res = requests.post(f"{BASE_URL}/ai/submit-practice", json=payload)
+    return res.json() if res.status_code == 200 else None

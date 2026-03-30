@@ -119,9 +119,14 @@ def get_result(attempt_id: int, db: Session = Depends(get_db)):
     for r in responses:
         result_responses.append({
             "question_id": r.question_id,
+            "question_text": r.question.question_text,
             "selected_option": r.selected_option,
             "correct_option": r.question.correct_option,
-            "is_correct": r.is_correct
+            "is_correct": r.is_correct,
+            "option_a": r.question.option_a,
+            "option_b": r.question.option_b,
+            "option_c": r.question.option_c,
+            "option_d": r.question.option_d
         })
 
     percentage = (attempt.score / attempt.total_questions * 100) if attempt.total_questions else 0

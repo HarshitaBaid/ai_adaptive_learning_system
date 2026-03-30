@@ -115,9 +115,14 @@ class ResponseCreate(BaseModel):
     
 class ResponseResponse(BaseModel):
     question_id: int
+    question_text: str
     selected_option: str
     correct_option: str
     is_correct: bool
+    option_a: str
+    option_b: str
+    option_c: str
+    option_d: str
 
     class Config:
         from_attributes = True
@@ -176,3 +181,9 @@ class StudentProgressResponse(BaseModel):
     accuracy: float
     strong_topics: List[str]
     weak_topics: List[str]
+    
+    
+class FeedbackCreate(BaseModel):
+    attempt_id: int
+    question_id: int
+    corrected_answer: str

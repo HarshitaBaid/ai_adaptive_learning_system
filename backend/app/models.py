@@ -69,6 +69,7 @@ class QuizAttempt(Base):
     total_questions = Column(Integer)
     time_taken = Column(Float)
     attempt_date = Column(DateTime, server_default=func.now())
+    is_practice = Column(Boolean, default=False)
 
     student = relationship("Student", back_populates="quiz_attempts")
     topic = relationship("Topic", back_populates="quiz_attempts")
@@ -99,3 +100,12 @@ class Response(Base):
     # Relationships
     attempt = relationship("QuizAttempt", back_populates="responses")
     question = relationship("Question")
+    
+    
+class Feedback(Base):
+    __tablename__ = "feedback"
+
+    id = Column(Integer, primary_key=True, index=True)
+    attempt_id = Column(Integer, ForeignKey("quiz_attempts.id"))
+    question_id = Column(Integer, ForeignKey("questions.id"))
+    corrected_answer = Column(String)

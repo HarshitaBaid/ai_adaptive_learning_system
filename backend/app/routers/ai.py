@@ -2,10 +2,11 @@ from http.client import HTTPException
 import joblib
 import pandas as pd
 from fastapi import APIRouter, Depends
+from collections import defaultdict
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas import QuestionResponse, StudentProgressResponse
-from app.models import QuizAttempt, Question, Response
+from app.models import QuizAttempt, Question, Response, Feedback
 
 router = APIRouter(prefix="/ai", tags=["AI"])
 
@@ -54,12 +55,19 @@ def predict_student_performance(student_id: int, db: Session = Depends(get_db)):
     return predictions
 
 
-@router.get("/recommend/{student_id}", response_model=list[QuestionResponse])
+@router.get("/recommend/{student_id}")
 def ai_recommend_questions(student_id: int, db: Session = Depends(get_db)):
+
+    # ------------------ FETCH ATTEMPTS ------------------
 
     attempts = db.query(QuizAttempt).filter(
         QuizAttempt.student_id == student_id
     ).all()
+
+    if not attempts:
+        return []
+
+    # ------------------ BUILD TOPIC DATA ------------------
 
     topic_data = {}
 
@@ -72,21 +80,47 @@ def ai_recommend_questions(student_id: int, db: Session = Depends(get_db)):
             "time": a.time_taken
         })
 
+    # ------------------ GET ATTEMPTED QUESTIONS ------------------
+
     attempted_question_ids = db.query(Response.question_id).join(
         QuizAttempt,
         QuizAttempt.id == Response.quiz_attempt_id
     ).filter(QuizAttempt.student_id == student_id).all()
-    
+
     attempted_question_ids = list(set([q[0] for q in attempted_question_ids]))
-    print(attempted_question_ids)
-    
-    recommended_questions = []
+
+    # ------------------ CALCULATE TOPIC WEAKNESS ------------------
+
+    topic_scores = []
 
     for topic_id, records in topic_data.items():
 
+        avg_accuracy = sum(r["accuracy"] for r in records) / len(records)
+
+        topic_scores.append({
+            "topic_id": topic_id,
+            "accuracy": avg_accuracy
+        })
+
+    # 🔥 SORT: weakest first
+    topic_scores.sort(key=lambda x: x["accuracy"])
+
+    # ------------------ RECOMMEND QUESTIONS ------------------
+
+    recommended_questions = []
+
+    for topic in topic_scores:
+
+        topic_id = topic["topic_id"]
+        records = topic_data[topic_id]
+
         attempts_count = len(records)
         avg_score = sum(r["score"] for r in records) / attempts_count
-        avg_time = sum(r["time"] for r in records) / attempts_count
+        valid_times = [r["time"] for r in records if r["time"] is not None]
+
+        avg_time = sum(valid_times) / len(valid_times) if valid_times else 0    
+
+        # ------------------ ML MODEL ------------------
 
         X = pd.DataFrame([{
             "attempts": attempts_count,
@@ -96,31 +130,37 @@ def ai_recommend_questions(student_id: int, db: Session = Depends(get_db)):
 
         difficulty = model.predict(X)[0]
 
+        # ------------------ QUERY QUESTIONS ------------------
+
         questions = db.query(Question).filter(
             Question.topic_id == topic_id,
             Question.difficulty_level == difficulty,
             ~Question.id.in_(attempted_question_ids)
-        ).limit(3).all()
-        
-        # fallback 1: ignore difficulty
+        ).limit(2).all()
+
+        # fallback 1
         if not questions:
             questions = db.query(Question).filter(
                 Question.topic_id == topic_id,
                 ~Question.id.in_(attempted_question_ids)
-            ).limit(3).all()
+            ).limit(2).all()
 
-        # fallback 2: allow attempted questions
+        # fallback 2
         if not questions:
             questions = db.query(Question).filter(
                 Question.topic_id == topic_id
-            ).limit(3).all()
+            ).limit(2).all()
 
         recommended_questions.extend(questions)
 
-    return recommended_questions
+        # 🔥 LIMIT TOTAL QUESTIONS (important)
+        if len(recommended_questions) >= 5:
+            break
+
+    return recommended_questions[:5]
 
 
-@router.get("/progress/{student_id}", response_model=StudentProgressResponse)
+@router.get("/progress/{student_id}")
 def student_progress(student_id: int, db: Session = Depends(get_db)):
 
     attempts = db.query(QuizAttempt).filter(
@@ -136,22 +176,40 @@ def student_progress(student_id: int, db: Session = Depends(get_db)):
         1 for a in attempts for r in a.responses if r.is_correct
     )
 
-    accuracy = (correct_answers / total_attempts) * 100
+    accuracy = (correct_answers / total_attempts * 100) if total_attempts else 0
 
-    topic_stats = {}
+    # ------------------ TOPIC STATS ------------------
+
+    topic_stats = defaultdict(lambda: {"correct": 0, "total": 0})
 
     for a in attempts:
+
+        # -------- NORMAL RESPONSES --------
         for r in a.responses:
-
             topic = r.question.topic.name
-
-            if topic not in topic_stats:
-                topic_stats[topic] = {"correct":0, "total":0}
 
             topic_stats[topic]["total"] += 1
 
             if r.is_correct:
                 topic_stats[topic]["correct"] += 1
+
+        # -------- FEEDBACK (NEW LOGIC) --------
+        feedbacks = db.query(Feedback).filter(
+            Feedback.attempt_id == a.id
+        ).all()
+
+        for f in feedbacks:
+            question = db.query(Question).filter(
+                Question.id == f.question_id
+            ).first()
+
+            if question:
+                topic = question.topic.name
+
+                # ❗ Penalize topic more if feedback was needed
+                topic_stats[topic]["total"] += 1
+
+    # ------------------ STRONG / WEAK ------------------
 
     strong_topics = []
     weak_topics = []
@@ -160,15 +218,82 @@ def student_progress(student_id: int, db: Session = Depends(get_db)):
         topic_accuracy = stats["correct"] / stats["total"]
 
         if topic_accuracy >= 0.7:
-            strong_topics.append(topic)
+            strong_topics.append({
+                "topic": topic,
+                "accuracy": round(topic_accuracy * 100, 2)
+            })
+
         elif topic_accuracy <= 0.4:
-            weak_topics.append(topic)
+            weak_topics.append({
+                "topic": topic,
+                "accuracy": round(topic_accuracy * 100, 2)
+            })
+
+    # ------------------ RESPONSE ------------------
 
     return {
         "student_id": student_id,
         "total_attempts": total_attempts,
         "correct_answers": correct_answers,
-        "accuracy": round(accuracy,2),
+        "accuracy": round(accuracy, 2),
         "strong_topics": strong_topics,
         "weak_topics": weak_topics
+    }
+    
+    
+@router.post("/submit-practice")
+def submit_practice(data: dict, db: Session = Depends(get_db)):
+
+    student_id = data["student_id"]
+    answers = data["answers"]
+
+    # ------------------ CREATE ATTEMPT ------------------
+
+    attempt = QuizAttempt(
+        student_id=student_id,
+        topic_id=None,  # mixed topics
+        score=0,
+        total_questions=len(answers),
+        time_taken=0,
+        is_practice=True
+    )
+
+    db.add(attempt)
+    db.commit()
+    db.refresh(attempt)
+
+    score = 0
+
+    # ------------------ SAVE RESPONSES ------------------
+
+    for q_id, selected in answers.items():
+
+        question = db.query(Question).filter(
+            Question.id == int(q_id)
+        ).first()
+
+        is_correct = (selected == question.correct_option)
+
+        if is_correct:
+            score += 1
+
+        response = Response(
+            quiz_attempt_id=attempt.id,
+            question_id=int(q_id),
+            selected_option=selected,
+            is_correct=is_correct
+        )
+
+        db.add(response)
+
+    # ------------------ UPDATE SCORE ------------------
+
+    attempt.score = score
+
+    db.commit()
+
+    return {
+        "score": score,
+        "total": len(answers),
+        "percentage": (score / len(answers)) * 100
     }
