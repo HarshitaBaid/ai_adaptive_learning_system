@@ -2,8 +2,6 @@ import streamlit as st
 import matplotlib.pyplot as plt
 from services.quiz_api import get_progress
 import plotly.graph_objects as go
-import plotly
-print(plotly.__version__)
 
 st.set_page_config(page_title="Dashboard", layout="wide")
 

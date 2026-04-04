@@ -25,34 +25,50 @@ if "user" not in st.session_state or "student_id" not in st.session_state["user"
 
 student_id = st.session_state["user"]["student_id"]
 
-# ------------------ FETCH QUESTIONS ------------------
+# ------------------ CACHE FUNCTION ------------------
 
-questions = get_recommendations(student_id)
+@st.cache_data(show_spinner=False)
+def get_recommendations_cached(student_id):
+    return get_recommendations(student_id)
+
+# ------------------ LOAD QUESTIONS (OPTIMIZED) ------------------
+
+if "rec_questions" not in st.session_state:
+    with st.spinner("Fetching recommendations..."):
+        st.session_state["rec_questions"] = get_recommendations_cached(student_id)
+
+questions = st.session_state["rec_questions"]
 
 if not questions:
     st.info("No recommendations yet. Take more quizzes!")
     st.stop()
 
+# ------------------ TIMER ------------------
 
-# ------------------ START TIMER ------------------
-
-if "start_time" not in st.session_state:
+if "start_time" not in st.session_state or st.session_state["start_time"] is None:
     st.session_state["start_time"] = time.time()
-    
 
-# ------------------ QUESTIONS UI ------------------
+# ------------------ ANSWERS STORAGE ------------------
+
+if "rec_answers" not in st.session_state:
+    st.session_state["rec_answers"] = {}
+
+# ------------------ UI ------------------
 
 st.subheader("📚 Recommended Questions")
 st.info("⏱️ Time will be recorded automatically")
-
-answers = {}
 
 for i, q in enumerate(questions, start=1):
 
     with st.container():
         st.markdown(
             f"""
-            <div style="padding:15px; border-radius:10px; border:1px solid #ddd;">
+            <div style="
+                padding:15px;
+                border-radius:10px;
+                border:1px solid #ddd;
+                margin-bottom:10px;
+            ">
                 <h4>Q{i}. {q['question_text']}</h4>
             </div>
             """,
@@ -70,10 +86,13 @@ for i, q in enumerate(questions, start=1):
             "Choose your answer:",
             list(options.keys()),
             format_func=lambda x: f"{x} → {options[x]}",
-            key=f"rec_{q['id']}"
+            key=f"rec_{q['id']}",
+            index=None   # ✅ prevents auto selection
         )
 
-        answers[q["id"]] = selected
+        # store only if selected
+        if selected:
+            st.session_state["rec_answers"][q["id"]] = selected
 
         st.markdown("<br>", unsafe_allow_html=True)
 
@@ -83,22 +102,33 @@ for i, q in enumerate(questions, start=1):
 
 if st.button("🚀 Submit Practice", use_container_width=True):
 
-    # ⏱️ Calculate time taken
+    if len(st.session_state["rec_answers"]) < len(questions):
+        st.warning("Please answer all questions")
+        st.stop()
+
+    if "start_time" not in st.session_state or st.session_state["start_time"] is None:
+        st.error("Session expired. Please restart.")
+        st.stop()
+
     time_taken = int(time.time() - st.session_state["start_time"])
 
-    result = submit_practice(
-        student_id,
-        answers,
-        time_taken   # ✅ NEW
-    )
+    with st.spinner("Submitting your answers..."):
+        result = submit_practice(
+            student_id,
+            st.session_state["rec_answers"],
+            time_taken
+        )
 
     if result:
         st.success(f"🎯 Score: {result['score']} / {result['total']}")
         st.write(f"📈 {result['percentage']:.2f}%")
         st.write(f"⏱️ Time Taken: {time_taken} seconds")
 
-        # Reset timer for next attempt
+        # ------------------ RESET ------------------
         st.session_state.pop("start_time", None)
+        st.session_state.pop("rec_questions", None)
+        st.session_state.pop("rec_answers", None)
+        st.cache_data.clear()
 
         st.balloons()
     else:

@@ -11,7 +11,8 @@ if "user" not in st.session_state or "student_id" not in st.session_state["user"
 # ------------------ SUBJECT ------------------
 
 if "subjects" not in st.session_state:
-    st.session_state["subjects"] = get_subjects()
+    with st.spinner('Loading subjects...'):
+        st.session_state["subjects"] = get_subjects()
 
 subjects = st.session_state["subjects"]
 

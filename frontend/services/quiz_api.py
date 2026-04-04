@@ -5,7 +5,7 @@ BASE_URL = "http://127.0.0.1:8000"
 
 # ------------------ SUBJECTS ------------------
 
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def get_subjects():
     res = requests.get(f"{BASE_URL}/subjects/")
     return res.json() if res.status_code == 200 else []
@@ -52,6 +52,11 @@ def get_result(attempt_id):
     return res.json() if res.status_code == 200 else None
 
 
+@st.cache_data
+def get_result_cached(attempt_id):
+    return get_result(attempt_id)
+
+
 def submit_feedback(attempt_id, question_id, corrected_answer):
     payload = {
         "attempt_id": attempt_id,
@@ -68,6 +73,7 @@ def get_progress(student_id):
     return res.json() if res.status_code == 200 else None
 
 
+@st.cache_data(show_spinner=False)
 def get_recommendations(student_id):
     res = requests.get(f"{BASE_URL}/ai/recommend/{student_id}")
     return res.json() if res.status_code == 200 else []

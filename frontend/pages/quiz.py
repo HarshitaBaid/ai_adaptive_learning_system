@@ -13,9 +13,9 @@ if "topic_id" not in st.session_state:
     st.warning("Please start quiz first")
     st.stop()
     
-# if "attempt_id" not in st.session_state:
-#     st.warning("No active quiz. Please start again.")
-#     st.stop()
+if "attempt_id" not in st.session_state:
+    st.warning("No active quiz. Please start again.")
+    st.stop()
 
 # ------------------ TIMER ------------------
 if "start_time" not in st.session_state:
@@ -68,19 +68,26 @@ for i, q in enumerate(questions, 1):
             "Select answer",
             option_values,
             key=f"q_{q['id']}",
-            label_visibility="collapsed" 
+            label_visibility="collapsed" ,
+            index=None
         )
 
         # store answer
-        for key, value in options.items():
-            if value == selected:
-                st.session_state["answers"][q["id"]] = key
-
+        if selected:
+            for key, value in options.items():
+                if value == selected:
+                    st.session_state["answers"][q["id"]] = key
+        
 # ------------------ SUBMIT ------------------
 if st.button("Submit Quiz"):
     if len(st.session_state["answers"]) < len(questions):
         st.warning("Please answer all questions")
-    
+        st.stop()   # 🚨 IMPORTANT
+
+    if "start_time" not in st.session_state or st.session_state["start_time"] is None:
+        st.error("Session expired. Please restart quiz.")
+        st.stop()
+
     time_taken = int(time.time() - st.session_state["start_time"])
 
     success = submit_quiz(
