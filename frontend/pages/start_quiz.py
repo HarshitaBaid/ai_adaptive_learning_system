@@ -3,9 +3,17 @@ from services.quiz_api import get_subjects, get_topics_by_subject, start_quiz
 
 st.title("🎯 Start Quiz")
 
+if "user" not in st.session_state or "student_id" not in st.session_state["user"]:
+    st.warning("Please login first")
+    st.stop()
+    
+
 # ------------------ SUBJECT ------------------
 
-subjects = get_subjects()
+if "subjects" not in st.session_state:
+    st.session_state["subjects"] = get_subjects()
+
+subjects = st.session_state["subjects"]
 
 if not subjects:
     st.error("No subjects found")
@@ -19,17 +27,26 @@ subject_id = next(s["id"] for s in subjects if s["name"] == selected_subject)
 
 # ------------------ TOPICS ------------------
 
-topics = get_topics_by_subject(subject_id)
+if selected_subject:
+    if "topics" not in st.session_state or st.session_state.get("subject_id") != subject_id:
+        
+        with st.spinner('Loading topics...'):
+            topics = get_topics_by_subject(subject_id)
+        
+        st.session_state["topics"] = topics
+        st.session_state["subject_id"] = subject_id
 
-if not topics:
-    st.warning("No topics for this subject")
-    st.stop()
+    topics = st.session_state["topics"]
 
-topic_names = [t["name"] for t in topics]
+    if not topics:
+        st.warning("No topics for this subject")
+        st.stop()
 
-selected_topic = st.selectbox("Select Topic", topic_names)
+    topic_names = [t["name"] for t in topics]
 
-topic_id = next(t["id"] for t in topics if t["name"] == selected_topic)
+    selected_topic = st.selectbox("Select Topic", topic_names)
+
+    topic_id = next(t["id"] for t in topics if t["name"] == selected_topic)
 
 # ------------------ START QUIZ ------------------
 
@@ -42,4 +59,4 @@ if st.button("Start Quiz"):
         st.session_state["topic_id"] = topic_id
         st.session_state["time_taken"] = None
 
-        st.success("Quiz Started! Go to Quiz Page 👉")
+        st.switch_page("pages/quiz.py")

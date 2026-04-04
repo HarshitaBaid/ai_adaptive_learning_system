@@ -3,6 +3,11 @@ from services.quiz_api import get_result, submit_feedback
 
 st.title("📊 Result")
 
+if "user" not in st.session_state or "student_id" not in st.session_state["user"]:
+    st.warning("Please login first")
+    st.stop()
+    
+
 # ------------------ SAFETY CHECK ------------------
 
 if "attempt_id" not in st.session_state:

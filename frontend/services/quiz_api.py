@@ -5,13 +5,15 @@ BASE_URL = "http://127.0.0.1:8000"
 
 # ------------------ SUBJECTS ------------------
 
+@st.cache_data
 def get_subjects():
     res = requests.get(f"{BASE_URL}/subjects/")
     return res.json() if res.status_code == 200 else []
 
 
 # ------------------ TOPICS ------------------
-@st.cache_data
+
+@st.cache_data(show_spinner=False)
 def get_topics_by_subject(subject_id):
     res = requests.get(f"{BASE_URL}/subjects/{subject_id}/topics")
     return res.json() if res.status_code == 200 else []
