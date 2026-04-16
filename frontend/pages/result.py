@@ -99,7 +99,7 @@ if show_analysis:
                     list(options.keys()),
                     format_func=lambda x: f"{x} → {options[x]}",
                     key=f"feedback_{q_id}",
-                    index=None   # ✅ prevents auto select
+                    index=None   
                 )
 
                 if corrected and st.button("Submit Answer", key=f"btn_{q_id}"):

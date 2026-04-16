@@ -2,11 +2,21 @@ import requests
 import streamlit as st
 from config.settings import BASE_URL
 
+#-----------------HELPER FUNCTION ----------------
+
+def safe_request(method, url, **kwargs):
+    try:
+        res = requests.request(method, url, **kwargs)
+        res.raise_for_status()
+        return res
+    except requests.exceptions.RequestException:
+        return None
+
 # ------------------ SUBJECTS ------------------
 
 @st.cache_data(show_spinner=False)
 def get_subjects():
-    res = requests.get(f"{BASE_URL}/subjects/")
+    res = safe_request("GET",f"{BASE_URL}/subjects/")
     return res.json() if res.status_code == 200 else []
 
 
@@ -14,7 +24,7 @@ def get_subjects():
 
 @st.cache_data(show_spinner=False)
 def get_topics_by_subject(subject_id):
-    res = requests.get(f"{BASE_URL}/subjects/{subject_id}/topics")
+    res = safe_request("GET",f"{BASE_URL}/subjects/{subject_id}/topics")
     return res.json() if res.status_code == 200 else []
 
 
@@ -26,12 +36,12 @@ def start_quiz(student_id, topic_id):
         "topic_id": topic_id
     }
 
-    res = requests.post(f"{BASE_URL}/quiz/start", json=payload)
+    res = safe_request("POST",f"{BASE_URL}/quiz/start", json=payload)
     return res.json() if res.status_code == 200 else None
 
 
 def get_questions(topic_id):
-    res = requests.get(f"{BASE_URL}/quiz/{topic_id}")
+    res = safe_request("GET",f"{BASE_URL}/quiz/{topic_id}")
     return res.json() if res.status_code == 200 else []
 
 
@@ -42,12 +52,12 @@ def submit_quiz(attempt_id, answers, time_taken):
         "time_taken": time_taken
     }
 
-    res = requests.post(f"{BASE_URL}/quiz/submit", json=payload)
-    return res.status_code == 200
+    res = safe_request("POST",f"{BASE_URL}/quiz/submit", json=payload)
+    return res is not None
 
 
 def get_result(attempt_id):
-    res = requests.get(f"{BASE_URL}/quiz/result/{attempt_id}")
+    res = safe_request("GET",f"{BASE_URL}/quiz/result/{attempt_id}")
     return res.json() if res.status_code == 200 else None
 
 
@@ -57,24 +67,24 @@ def get_result_cached(attempt_id):
 
 
 def submit_feedback(attempt_id, question_id, corrected_answer):
-    payload = {
+    payload = {     
         "attempt_id": attempt_id,
         "question_id": question_id,
         "corrected_answer": corrected_answer
     }
 
-    res = requests.post(f"{BASE_URL}/feedback", json=payload)
+    res = safe_request("POST",f"{BASE_URL}/feedback", json=payload)
     return res.status_code == 200
 
 @st.cache_data(show_spinner=False, ttl=120)
 def get_progress(student_id):
-    res = requests.get(f"{BASE_URL}/ai/progress/{student_id}")
+    res = safe_request("GET",f"{BASE_URL}/ai/progress/{student_id}")
     return res.json() if res.status_code == 200 else None
 
 
 @st.cache_data(show_spinner=False)
 def get_recommendations(student_id):
-    res = requests.get(f"{BASE_URL}/ai/recommend/{student_id}")
+    res = safe_request("GET",f"{BASE_URL}/ai/recommend/{student_id}")
     return res.json() if res.status_code == 200 else []
 
 
@@ -85,5 +95,5 @@ def submit_practice(student_id, answers, time_taken):
         "time_taken": time_taken
     }
 
-    res = requests.post(f"{BASE_URL}/ai/submit-practice", json=payload)
+    res = safe_request("POST",f"{BASE_URL}/ai/submit-practice", json=payload)
     return res.json() if res.status_code == 200 else None
