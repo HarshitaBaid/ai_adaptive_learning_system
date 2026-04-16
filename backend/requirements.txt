@@ -6,3 +6,4 @@ passlib[bcrypt]
 bcrypt==4.3.0
 python-dotenv
 pydantic[email]
+joblib
