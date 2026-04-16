@@ -193,3 +193,24 @@ class FeedbackCreate(BaseModel):
     attempt_id: int
     question_id: int
     corrected_answer: str
+    
+    
+class UpdateName(BaseModel):
+    name: str
+
+    @field_validator("name")
+    def validate_name(cls, v):
+        if not v.strip():
+            raise ValueError("Name cannot be empty")
+        return v.strip()
+
+
+class ChangePassword(BaseModel):
+    old_password: str
+    new_password: str
+
+    @field_validator("new_password")
+    def validate_password(cls, v):
+        if len(v.strip()) < 6:
+            raise ValueError("Password must be at least 6 characters")
+        return v.strip()

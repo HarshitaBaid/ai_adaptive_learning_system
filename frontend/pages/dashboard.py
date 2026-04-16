@@ -6,51 +6,54 @@ import plotly.graph_objects as go
 st.set_page_config(page_title="Dashboard", layout="wide")
 
 # ------------------ CUSTOM CSS ------------------
-st.markdown("""
-<style>
+if "css_loaded" not in st.session_state:
+    st.session_state["css_loaded"] = True
+    st.markdown("""
+    <style>
 
-/* Background */
-.stApp {
-    background: linear-gradient(135deg, #0E1117, #111827);
-}
+    /* Background */
+    .stApp {
+        background: linear-gradient(135deg, #0E1117, #111827);
+    }
 
-/* Glass Card */
-.card {
-    background: linear-gradient(145deg, #ffffff, #ffffff);
-    padding: 1px;
-    border-radius: 1px;
-    box-shadow: 0px 6px 20px rgba(0,0,0,0.5);
-    margin-bottom: 20px;
-    margin-top: 10px;
-}
+    /* Glass Card */
+    .card {
+        background: linear-gradient(145deg, #ffffff, #ffffff);
+        padding: 1px;
+        border-radius: 1px;
+        box-shadow: 0px 6px 20px rgba(0,0,0,0.5);
+        margin-bottom: 20px;
+        margin-top: 10px;
+    }
 
-/* KPI Card */
-.kpi-card {
-    background: linear-gradient(135deg, #6a11cb, #2575fc);
-    padding: 20px;
-    border-radius: 18px;
-    color: white;
-}
+    /* KPI Card */
+    .kpi-card {
+        background: linear-gradient(135deg, #6a11cb, #2575fc);
+        padding: 20px;
+        border-radius: 18px;
+        color: white;
+    }
 
-/* Titles */
-.card-title {
-    font-size: 14px;
-    opacity: 0.8;
-}
+    /* Titles */
+    .card-title {
+        font-size: 14px;
+        opacity: 0.8;
+    }
 
-.card-value {
-    font-size: 30px;
-    font-weight: bold;
-}
+    .card-value {
+        font-size: 30px;
+        font-weight: bold;
+    }
 
-/* Section headers */
-.section-title {
-    color: white;
-    margin-bottom: 10px;
-}
+    /* Section headers */
+    .section-title {
+        color: white;
+        margin-bottom: 10px;
+    }
 
-</style>
-""", unsafe_allow_html=True)
+    </style>
+    """, unsafe_allow_html=True)
+
 
 # ------------------ HEADER ------------------
 st.markdown(
@@ -59,14 +62,20 @@ st.markdown(
 )
 
 # ------------------ FETCH DATA ------------------
-if "student_id" not in st.session_state["user"]:
+if "user" not in st.session_state or "student_id" not in st.session_state["user"]:
     st.warning("Please login first")
     st.stop()
 
-data = get_progress(st.session_state["user"]["student_id"])
+if "dashboard_data" not in st.session_state:
+    with st.spinner("Loading dashboard..."):
+        st.session_state["dashboard_data"] = get_progress(
+            st.session_state["user"]["student_id"]
+        )
+
+data = st.session_state["dashboard_data"]
 
 if not data:
-    st.error("Failed to load dashboard. Please login first.")
+    st.info("No activity yet. Start a quiz to see your dashboard insights!")
     st.stop()
 
 # ------------------ KPI CARDS ------------------
@@ -95,7 +104,7 @@ with col2:
     kpi("✅ Correct Answers", data["correct_answers"], "linear-gradient(135deg, #f7971e, #ffd200)")
 
 with col3:
-    kpi("📝 Total Attempts", data["total_attempts"], "linear-gradient(135deg, #8E2DE2, #4A00E0)")
+    kpi("📝 Total Questions Attempts", data["total_attempts"], "linear-gradient(135deg, #8E2DE2, #4A00E0)")
 
 # ------------------ CHART + INSIGHTS ------------------
 col1, col2 = st.columns([1.2, 1])
@@ -105,9 +114,9 @@ with col1:
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown("<h4 style='color:white;'>📊 Performance</h4>", unsafe_allow_html=True)
 
-    correct = data["correct_answers"]
-    total = data["total_attempts"]
-    wrong = total - correct
+    correct = data.get("correct_answers", 0)
+    total = data.get("total_attempts", 0)
+    wrong = max(total - correct, 0)
 
     fig = go.Figure(data=[go.Pie(
         labels=["Correct", "Wrong"],
@@ -144,7 +153,8 @@ with col1:
         ]
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    with st.container():
+        st.plotly_chart(fig, use_container_width=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
     
@@ -192,7 +202,7 @@ with col2:
     # Mini stats
     st.markdown(f"""
     <div style='color:#ccc; font-size:14px; line-height:1.8'>
-    📊 Attempts: <b>{data['total_attempts']}</b><br>
+    📊 Questions Attempts: <b>{data['total_attempts']}</b><br>
     ✅ Correct: <b>{data['correct_answers']}</b><br>
     🎯 Accuracy: <b>{data['accuracy']}%</b>
     </div>

@@ -1,7 +1,6 @@
 import requests
 import streamlit as st
-
-BASE_URL = "http://127.0.0.1:8000"
+from config.settings import BASE_URL
 
 # ------------------ SUBJECTS ------------------
 
@@ -52,7 +51,7 @@ def get_result(attempt_id):
     return res.json() if res.status_code == 200 else None
 
 
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def get_result_cached(attempt_id):
     return get_result(attempt_id)
 
@@ -67,7 +66,7 @@ def submit_feedback(attempt_id, question_id, corrected_answer):
     res = requests.post(f"{BASE_URL}/feedback", json=payload)
     return res.status_code == 200
 
-
+@st.cache_data(show_spinner=False, ttl=120)
 def get_progress(student_id):
     res = requests.get(f"{BASE_URL}/ai/progress/{student_id}")
     return res.json() if res.status_code == 200 else None

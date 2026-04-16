@@ -103,7 +103,8 @@ if st.button("Submit Quiz"):
         st.session_state.pop("topic_id", None)
         # st.session_state.pop("attempt_id", None)
         st.session_state["start_time"] = None
-        
+        st.cache_data.clear()
+        st.session_state.pop("dashboard_data", None)
         st.switch_page("pages/result.py")
 
     else:

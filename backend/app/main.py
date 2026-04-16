@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import topics, subjects, questions, quiz, students, ai, analytics, feedback
+from app.routers import topics, subjects, questions, quiz, students, ai, analytics, feedback, settings
 
 app = FastAPI(
     title="AI Adaptive Learning System",
@@ -20,3 +20,4 @@ app.include_router(students.router)
 app.include_router(ai.router)
 app.include_router(analytics.router)
 app.include_router(feedback.router)
+app.include_router(settings.router)

@@ -51,7 +51,8 @@ def login_student(student: schemas.StudentLogIn, db: Session = Depends(get_db)):
     return {
         "message": "Login successful",
         "student_id": existing.id,
-        "name": existing.name
+        "name": existing.name,
+        "email": existing.email
     }
     
     
