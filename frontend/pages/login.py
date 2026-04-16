@@ -12,9 +12,11 @@ if st.button("Login"):
         "password": password
     })
 
-    if res.status_code == 200:
+    if res is None:
+        st.error("Unable to connect to server. Please try again later.")
+    elif res.status_code == 200:
         st.session_state["user"] = res.json()
         st.success("Login successful")
-        st.switch_page("pages/dashboard.py")   # navigate
+        st.switch_page("pages/dashboard.py")   
     else:
         st.error("Invalid credentials")
