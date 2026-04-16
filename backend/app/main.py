@@ -7,6 +7,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
+#Health check
 @app.get("/")
 def health_check():
     return {"status": "Backend is running"}
