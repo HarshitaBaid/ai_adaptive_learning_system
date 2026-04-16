@@ -7,3 +7,6 @@ bcrypt==4.3.0
 python-dotenv
 pydantic[email]
 joblib
+pandas
+numpy
+scikit-learn
