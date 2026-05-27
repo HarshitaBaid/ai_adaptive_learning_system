@@ -41,13 +41,12 @@ student_id = st.session_state["user"]["student_id"]
 tab1, tab2 = st.tabs(["👤 Profile", "🔒 Change Password"])
 
 
-# ------------------ PROFILE ------------------
+# profile
 with tab1:
     st.subheader("👤 Profile")
 
     user = st.session_state["user"]
 
-    # ------------------ DISPLAY INFO ------------------
     st.markdown(f"""
     <div style="
         background: linear-gradient(135deg, #1f2937, #111827);
@@ -61,7 +60,7 @@ with tab1:
     </div>
     """, unsafe_allow_html=True)
 
-    # ------------------ UPDATE NAME ------------------
+
     st.markdown("### ✏️ Update Name")
 
     new_name = st.text_input("New Name", value=user.get("name", ""))
@@ -84,7 +83,7 @@ with tab1:
 
     st.markdown("<hr>", unsafe_allow_html=True)
 
-    # ------------------ LOGOUT ------------------
+    # logout
     st.markdown("### 🚪 Logout")
 
     if st.button("Logout"):
@@ -93,7 +92,7 @@ with tab1:
 
         st.switch_page("app.py")
 
-# ------------------ PASSWORD ------------------
+# change password
 with tab2:
     st.subheader("Change Password")
 
