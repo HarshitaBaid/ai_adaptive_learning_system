@@ -58,7 +58,7 @@ def predict_student_performance(student_id: int, db: Session = Depends(get_db)):
 @router.get("/recommend/{student_id}")
 def ai_recommend_questions(student_id: int, db: Session = Depends(get_db)):
 
-    # ------------------ FETCH ATTEMPTS ------------------
+    # fetch attempts
 
     attempts = db.query(QuizAttempt).filter(
         QuizAttempt.student_id == student_id
@@ -67,7 +67,6 @@ def ai_recommend_questions(student_id: int, db: Session = Depends(get_db)):
     if not attempts:
         return []
 
-    # ------------------ BUILD TOPIC DATA ------------------
 
     topic_data = {}
 
@@ -80,7 +79,7 @@ def ai_recommend_questions(student_id: int, db: Session = Depends(get_db)):
             "time": a.time_taken
         })
 
-    # ------------------ GET ATTEMPTED QUESTIONS ------------------
+    # getting attempted questions
 
     attempted_question_ids = db.query(Response.question_id).join(
         QuizAttempt,
@@ -89,7 +88,7 @@ def ai_recommend_questions(student_id: int, db: Session = Depends(get_db)):
 
     attempted_question_ids = list(set([q[0] for q in attempted_question_ids]))
 
-    # ------------------ CALCULATE TOPIC WEAKNESS ------------------
+    # calculate weakness
 
     topic_scores = []
 
@@ -102,10 +101,9 @@ def ai_recommend_questions(student_id: int, db: Session = Depends(get_db)):
             "accuracy": avg_accuracy
         })
 
-    # 🔥 SORT: weakest first
     topic_scores.sort(key=lambda x: x["accuracy"])
 
-    # ------------------ RECOMMEND QUESTIONS ------------------
+    # question recommendation
 
     recommended_questions = []
 
@@ -120,7 +118,7 @@ def ai_recommend_questions(student_id: int, db: Session = Depends(get_db)):
 
         avg_time = sum(valid_times) / len(valid_times) if valid_times else 0    
 
-        # ------------------ ML MODEL ------------------
+        # applying model
 
         X = pd.DataFrame([{
             "attempts": attempts_count,
@@ -130,7 +128,6 @@ def ai_recommend_questions(student_id: int, db: Session = Depends(get_db)):
 
         difficulty = model.predict(X)[0]
 
-        # ------------------ QUERY QUESTIONS ------------------
 
         questions = db.query(Question).filter(
             Question.topic_id == topic_id,
@@ -138,14 +135,12 @@ def ai_recommend_questions(student_id: int, db: Session = Depends(get_db)):
             ~Question.id.in_(attempted_question_ids)
         ).limit(2).all()
 
-        # fallback 1
         if not questions:
             questions = db.query(Question).filter(
                 Question.topic_id == topic_id,
                 ~Question.id.in_(attempted_question_ids)
             ).limit(2).all()
 
-        # fallback 2
         if not questions:
             questions = db.query(Question).filter(
                 Question.topic_id == topic_id
@@ -153,7 +148,6 @@ def ai_recommend_questions(student_id: int, db: Session = Depends(get_db)):
 
         recommended_questions.extend(questions)
 
-        # 🔥 LIMIT TOTAL QUESTIONS (important)
         if len(recommended_questions) >= 5:
             break
 
@@ -178,13 +172,12 @@ def student_progress(student_id: int, db: Session = Depends(get_db)):
 
     accuracy = (correct_answers / total_attempts * 100) if total_attempts else 0
 
-    # ------------------ TOPIC STATS ------------------
+    # topic stats
 
     topic_stats = defaultdict(lambda: {"correct": 0, "total": 0})
 
     for a in attempts:
 
-        # -------- NORMAL RESPONSES --------
         for r in a.responses:
             topic = r.question.topic.name
 
@@ -193,7 +186,7 @@ def student_progress(student_id: int, db: Session = Depends(get_db)):
             if r.is_correct:
                 topic_stats[topic]["correct"] += 1
 
-        # -------- FEEDBACK (NEW LOGIC) --------
+        # FEEDBACK
         feedbacks = db.query(Feedback).filter(
             Feedback.attempt_id == a.id
         ).all()
@@ -206,10 +199,8 @@ def student_progress(student_id: int, db: Session = Depends(get_db)):
             if question:
                 topic = question.topic.name
 
-                # ❗ Penalize topic more if feedback was needed
                 topic_stats[topic]["total"] += 1
 
-    # ------------------ STRONG / WEAK ------------------
 
     strong_topics = []
     weak_topics = []
@@ -229,7 +220,7 @@ def student_progress(student_id: int, db: Session = Depends(get_db)):
                 "accuracy": round(topic_accuracy * 100, 2)
             })
 
-    # ------------------ RESPONSE ------------------
+    # returning response
 
     return {
         "student_id": student_id,
@@ -247,7 +238,7 @@ def submit_practice(data: dict, db: Session = Depends(get_db)):
     student_id = data["student_id"]
     answers = data["answers"]
 
-    # ------------------ CREATE ATTEMPT ------------------
+    #attempt created
 
     attempt = QuizAttempt(
         student_id=student_id,
@@ -263,8 +254,6 @@ def submit_practice(data: dict, db: Session = Depends(get_db)):
     db.refresh(attempt)
 
     score = 0
-
-    # ------------------ SAVE RESPONSES ------------------
 
     for q_id, selected in answers.items():
 
@@ -286,7 +275,7 @@ def submit_practice(data: dict, db: Session = Depends(get_db)):
 
         db.add(response)
 
-    # ------------------ UPDATE SCORE ------------------
+    # updation of score
 
     attempt.score = score
 
