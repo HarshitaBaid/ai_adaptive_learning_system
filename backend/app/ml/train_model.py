@@ -11,7 +11,7 @@ os.makedirs("ml", exist_ok=True)
 
 df = pd.read_csv("ml_dataset.csv")
 
-# create label
+# label created
 def difficulty_label(acc):
     if acc < 0.4:
         return "easy"
@@ -45,14 +45,14 @@ model = RandomForestClassifier(
 
 model.fit(X_train, y_train)
 
-# ------------------ ACCURACY ------------------
+# ACCURACY OF MODEL
 train_acc = model.score(X_train, y_train)
 test_acc = model.score(X_test, y_test)
 
 print("Train Accuracy:", train_acc)
 print("Test Accuracy:", test_acc)
 
-# ------------------ GRAPH 1: ACCURACY ------------------
+# ACCURACY GRAPH
 plt.figure()
 plt.bar(["Train Accuracy", "Test Accuracy"], [train_acc, test_acc])
 plt.title("Model Accuracy Comparison")
@@ -63,7 +63,7 @@ plt.grid(axis='y', linestyle='--', alpha=0.7)
 plt.savefig("app/ml/accuracy_comparison.png")
 plt.close()
 
-# ------------------ GRAPH 2: CONFUSION MATRIX ------------------
+# CONFUSION MATRIX 
 y_pred = model.predict(X_test)
 cm = confusion_matrix(y_test, y_pred)
 
@@ -73,7 +73,7 @@ plt.title("Confusion Matrix")
 plt.savefig("app/ml/confusion_matrix.png")
 plt.close()
 
-# ------------------ GRAPH 3: ACCURACY VS TREES ------------------
+# ACCURACY VS TREES GRAPH
 trees = [10, 50, 100, 150]
 scores = []
 
@@ -90,7 +90,7 @@ plt.ylabel("Accuracy")
 plt.savefig("app/ml/accuracy_vs_trees.png")
 plt.close()
 
-# ------------------ SAVE MODEL ------------------
+# SAVE MODEL
 joblib.dump(model, "app/ml/weakness_model.pkl")
 
 print("✅ Model and graphs saved in 'ml/' folder")
