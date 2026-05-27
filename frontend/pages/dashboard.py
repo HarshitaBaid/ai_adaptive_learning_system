@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 
 st.set_page_config(page_title="Dashboard", layout="wide")
 
-# ------------------ CUSTOM CSS ------------------
+# Custom CSS 
 if "css_loaded" not in st.session_state:
     st.session_state["css_loaded"] = True
     st.markdown("""
@@ -55,13 +55,13 @@ if "css_loaded" not in st.session_state:
     """, unsafe_allow_html=True)
 
 
-# ------------------ HEADER ------------------
+# HEADER 
 st.markdown(
     "<h1 style='text-align:center; color:white;'>📊 Student Dashboard</h1>",
     unsafe_allow_html=True
 )
 
-# ------------------ FETCH DATA ------------------
+# FETCH DATA 
 if "user" not in st.session_state or "student_id" not in st.session_state["user"]:
     st.warning("Please login first")
     st.stop()
@@ -78,7 +78,7 @@ if not data:
     st.info("No activity yet. Start a quiz to see your dashboard insights!")
     st.stop()
 
-# ------------------ KPI CARDS ------------------
+# KPI CARDS 
 st.markdown("<h3 class='section-title'>📈 Overview</h3>", unsafe_allow_html=True)
 
 col1, col2, col3 = st.columns(3)
@@ -106,10 +106,9 @@ with col2:
 with col3:
     kpi("📝 Total Questions Attempts", data["total_attempts"], "linear-gradient(135deg, #8E2DE2, #4A00E0)")
 
-# ------------------ CHART + INSIGHTS ------------------
+# charts   
 col1, col2 = st.columns([1.2, 1])
 
-# -------- DONUT CHART --------
 with col1:
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown("<h4 style='color:white;'>📊 Performance</h4>", unsafe_allow_html=True)
@@ -121,7 +120,7 @@ with col1:
     fig = go.Figure(data=[go.Pie(
         labels=["Correct", "Wrong"],
         values=[correct, wrong],
-        hole=0.65,  # 🔥 donut style
+        hole=0.65,  
         marker=dict(
             colors=["#00C49F", "#FF4B4B"]
         ),
@@ -130,7 +129,6 @@ with col1:
         hovertemplate="<b>%{label}</b><br>Count: %{value}<extra></extra>"
     )])
 
-    # 🔥 Center text (IMPORTANT)
     fig.update_layout(
         showlegend=True,
         legend=dict(
@@ -159,7 +157,7 @@ with col1:
     st.markdown('</div>', unsafe_allow_html=True)
     
     
-# -------- INSIGHTS --------
+# INSIGHTS 
 with col2:
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown("<h4 style='color:white;'>💡 Insights</h4>", unsafe_allow_html=True)
@@ -199,7 +197,6 @@ with col2:
 
     st.markdown("<hr>", unsafe_allow_html=True)
 
-    # Mini stats
     st.markdown(f"""
     <div style='color:#ccc; font-size:14px; line-height:1.8'>
     📊 Questions Attempts: <b>{data['total_attempts']}</b><br>
@@ -210,7 +207,7 @@ with col2:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ------------------ WEAK & STRONG ------------------
+# WEAK & STRONG
 col1, col2 = st.columns(2)
 
 with col1:
@@ -241,7 +238,7 @@ with col2:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ------------------ BUTTON ------------------
+# BUTTON
 st.markdown("<br>", unsafe_allow_html=True)
 
 if st.button("🚀 Practice Weak Topics"):
