@@ -21,7 +21,7 @@ if "attempt_id" not in st.session_state:
 if "start_time" not in st.session_state:
     st.session_state["start_time"] = time.time()
 
-# ------------------ LOAD QUESTIONS (OPTIMIZED) ------------------
+# loading questions
 if "questions" not in st.session_state:
     with st.spinner("Loading questions..."):
         st.session_state["questions"] = get_questions(st.session_state["topic_id"])
@@ -32,11 +32,10 @@ if not questions:
     st.error("No questions found")
     st.stop()
 
-# ------------------ ANSWERS STORAGE ------------------
+# store answers
 if "answers" not in st.session_state:
     st.session_state["answers"] = {}
 
-# ------------------ UI ------------------
 st.info("⏱️ Time will be recorded automatically...")
 for i, q in enumerate(questions, 1):
 
@@ -78,11 +77,11 @@ for i, q in enumerate(questions, 1):
                 if value == selected:
                     st.session_state["answers"][q["id"]] = key
         
-# ------------------ SUBMIT ------------------
+#  SUBMIT
 if st.button("Submit Quiz"):
     if len(st.session_state["answers"]) < len(questions):
         st.warning("Please answer all questions")
-        st.stop()   # 🚨 IMPORTANT
+        st.stop()  
 
     if "start_time" not in st.session_state or st.session_state["start_time"] is None:
         st.error("Session expired. Please restart quiz.")
