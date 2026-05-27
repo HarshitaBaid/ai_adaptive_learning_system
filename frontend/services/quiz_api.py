@@ -2,7 +2,7 @@ import requests
 import streamlit as st
 from config.settings import BASE_URL
 
-#-----------------HELPER FUNCTION ----------------
+#HELPER FUNCTION 
 
 def safe_request(method, url, **kwargs):
     try:
@@ -12,7 +12,7 @@ def safe_request(method, url, **kwargs):
     except requests.exceptions.RequestException:
         return None
 
-# ------------------ SUBJECTS ------------------
+# SUBJECTS 
 
 @st.cache_data(show_spinner=False)
 def get_subjects():
@@ -20,7 +20,7 @@ def get_subjects():
     return res.json() if res.status_code == 200 else []
 
 
-# ------------------ TOPICS ------------------
+#  TOPICS 
 
 @st.cache_data(show_spinner=False)
 def get_topics_by_subject(subject_id):
@@ -28,8 +28,7 @@ def get_topics_by_subject(subject_id):
     return res.json() if res.status_code == 200 else []
 
 
-# ------------------ QUIZ ------------------
-
+# quiz
 def start_quiz(student_id, topic_id):
     payload = {
         "student_id": student_id,
@@ -40,11 +39,13 @@ def start_quiz(student_id, topic_id):
     return res.json() if res.status_code == 200 else None
 
 
+#questions
 def get_questions(topic_id):
     res = safe_request("GET",f"{BASE_URL}/quiz/{topic_id}")
     return res.json() if res.status_code == 200 else []
 
 
+#submit quiz
 def submit_quiz(attempt_id, answers, time_taken):
     payload = {
         "attempt_id": attempt_id,
@@ -56,6 +57,7 @@ def submit_quiz(attempt_id, answers, time_taken):
     return res is not None
 
 
+#results
 def get_result(attempt_id):
     res = safe_request("GET",f"{BASE_URL}/quiz/result/{attempt_id}")
     return res.json() if res.status_code == 200 else None
@@ -66,6 +68,7 @@ def get_result_cached(attempt_id):
     return get_result(attempt_id)
 
 
+#feedback
 def submit_feedback(attempt_id, question_id, corrected_answer):
     payload = {     
         "attempt_id": attempt_id,
@@ -82,6 +85,7 @@ def get_progress(student_id):
     return res.json() if res.status_code == 200 else None
 
 
+#recommendations
 @st.cache_data(show_spinner=False)
 def get_recommendations(student_id):
     res = safe_request("GET",f"{BASE_URL}/ai/recommend/{student_id}")
