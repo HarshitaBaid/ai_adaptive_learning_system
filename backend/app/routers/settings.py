@@ -12,7 +12,7 @@ router = APIRouter(
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-# ------------------ UPDATE NAME ------------------
+# UPDATE NAME 
 @router.put("/update-name/{student_id}")
 def update_name(student_id: int, payload: schemas.UpdateName, db: Session = Depends(get_db)):
     
@@ -28,7 +28,7 @@ def update_name(student_id: int, payload: schemas.UpdateName, db: Session = Depe
     return {"message": "Name updated successfully"}
 
 
-# ------------------ CHANGE PASSWORD ------------------
+# password change
 @router.put("/change-password/{student_id}")
 def change_password(student_id: int, payload: schemas.ChangePassword, db: Session = Depends(get_db)):
 
