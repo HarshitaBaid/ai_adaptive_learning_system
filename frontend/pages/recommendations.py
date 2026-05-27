@@ -4,8 +4,7 @@ from services.quiz_api import get_recommendations, submit_practice
 
 st.set_page_config(page_title="Recommendations", layout="wide")
 
-# ------------------ HEADER ------------------
-
+#  HEADER
 st.markdown(
     """
     <h1 style='text-align: center;'>🎯 Personalized Practice</h1>
@@ -17,21 +16,20 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# ------------------ CHECK LOGIN ------------------
-
+# login check
 if "user" not in st.session_state or "student_id" not in st.session_state["user"]:
     st.warning("Please login first")
     st.stop()
 
 student_id = st.session_state["user"]["student_id"]
 
-# ------------------ CACHE FUNCTION ------------------
+# cache
 
 @st.cache_data(show_spinner=False)
 def get_recommendations_cached(student_id):
     return get_recommendations(student_id)
 
-# ------------------ LOAD QUESTIONS (OPTIMIZED) ------------------
+# loading of questions
 
 if "rec_questions" not in st.session_state:
     with st.spinner("Fetching recommendations..."):
@@ -43,17 +41,16 @@ if not questions:
     st.info("No recommendations yet. Take more quizzes!")
     st.stop()
 
-# ------------------ TIMER ------------------
+# timer
 
 if "start_time" not in st.session_state or st.session_state["start_time"] is None:
     st.session_state["start_time"] = time.time()
 
-# ------------------ ANSWERS STORAGE ------------------
+# store answersw
 
 if "rec_answers" not in st.session_state:
     st.session_state["rec_answers"] = {}
 
-# ------------------ UI ------------------
 
 st.subheader("📚 Recommended Questions")
 st.info("⏱️ Time will be recorded automatically")
@@ -87,7 +84,7 @@ for i, q in enumerate(questions, start=1):
             list(options.keys()),
             format_func=lambda x: f"{x} → {options[x]}",
             key=f"rec_{q['id']}",
-            index=None   # ✅ prevents auto selection
+            index=None   #prevents auto selection
         )
 
         # store only if selected
@@ -98,7 +95,7 @@ for i, q in enumerate(questions, start=1):
 
     st.markdown("---")
 
-# ------------------ SUBMIT ------------------
+# submit
 
 if st.button("🚀 Submit Practice", use_container_width=True):
 
