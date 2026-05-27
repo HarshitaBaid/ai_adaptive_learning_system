@@ -3,17 +3,17 @@ from services.quiz_api import get_result_cached, submit_feedback
 
 st.title("📊 Result")
 
-# ------------------ AUTH ------------------
+# authentication
 if "user" not in st.session_state or "student_id" not in st.session_state["user"]:
     st.warning("Please login first")
     st.stop()
 
-# ------------------ SAFETY CHECK ------------------
+# safety check
 if "attempt_id" not in st.session_state:
     st.warning("No quiz attempt found")
     st.stop()
 
-# ------------------ FETCH RESULT ------------------
+# getting results
 with st.spinner("Fetching results..."):
     result = get_result_cached(st.session_state["attempt_id"])
 
@@ -25,7 +25,7 @@ score = result["score"]
 total = result["total"]
 percentage = round(result["percentage"], 2)
 
-# ------------------ SUMMARY CONTAINER ------------------
+# summary
 with st.container():
     st.markdown(
         f"""
@@ -48,10 +48,9 @@ with st.container():
         unsafe_allow_html=True
     )
 
-# ------------------ TOGGLE DETAILED ANALYSIS ------------------
+# detailed analysis
 show_analysis = st.checkbox("Show Detailed Analysis")
 
-# ------------------ DETAILED RESULT ------------------
 if show_analysis:
 
     st.subheader("📋 Detailed Analysis")
@@ -76,7 +75,7 @@ if show_analysis:
                 f"(Your: {r['selected_option']})"
             )
 
-            # ------------------ FEEDBACK ------------------
+            # feedback
 
             if st.session_state.get(feedback_key):
                 correct_letter = r["correct_option"]
@@ -123,7 +122,7 @@ if show_analysis:
 
         st.divider()
 
-# ------------------ RESET ------------------
+# reset
 if st.button("Take Another Quiz"):
     for key in ["attempt_id", "topic_id", "start_time"]:
         st.session_state.pop(key, None)
