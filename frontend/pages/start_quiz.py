@@ -8,7 +8,7 @@ if "user" not in st.session_state or "student_id" not in st.session_state["user"
     st.stop()
     
 
-# ------------------ SUBJECT ------------------
+# get subjects
 
 if "subjects" not in st.session_state:
     with st.spinner('Loading subjects...'):
@@ -26,7 +26,7 @@ selected_subject = st.selectbox("Select Subject", subject_names)
 
 subject_id = next(s["id"] for s in subjects if s["name"] == selected_subject)
 
-# ------------------ TOPICS ------------------
+# get topics
 
 if selected_subject:
     if "topics" not in st.session_state or st.session_state.get("subject_id") != subject_id:
@@ -49,7 +49,7 @@ if selected_subject:
 
     topic_id = next(t["id"] for t in topics if t["name"] == selected_topic)
 
-# ------------------ START QUIZ ------------------
+# quiz selection
 
 if st.button("Start Quiz"):
     res = start_quiz(st.session_state["user"]["student_id"], topic_id)
