@@ -20,7 +20,7 @@ This project aims to solve the problem of one-size-fits-all education by:
 - **Backend:** FastAPI
 - **Database:** PostgreSQL (Supabase)
 - **Machine Learning:** Python (scikit-learn)
-- **Frontend:** (To be implemented)
+- **Frontend:** Streamlit
 - **Version Control:** Git & GitHub
 
 ---
@@ -37,9 +37,7 @@ ai-adaptive-learning-system/
 │
 ├── backend/
 ├── frontend/
-├── ml/
 ├── database/
-├── docs/
 ├── README.md
 
 ---
